@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Toast } from "@/components/ui/toast";
+import { toast } from "sonner";
+
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Minus, Plus } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { ThirdwebContract } from "thirdweb";
 import {
 	ClaimButton,
@@ -19,7 +17,7 @@ import {
 } from "thirdweb/react";
 import { client } from "@/lib/thirdwebClient";
 import React from "react";
-import { toast } from "sonner";
+import axios from "axios";
 import { Skeleton } from "./ui/skeleton";
 
 type Props = {
@@ -35,12 +33,9 @@ type Props = {
 };
 
 export function NftMint(props: Props) {
-	// console.log(props);
 	const [isMinting, setIsMinting] = useState(false);
 	const [quantity, setQuantity] = useState(1);
-	const [useCustomAddress, setUseCustomAddress] = useState(false);
-	const [customAddress, setCustomAddress] = useState("");
-	const { theme, setTheme } = useTheme();
+	const [ethPriceInUSD, setEthPriceInUSD] = useState<number | null>(null);
 	const account = useActiveAccount();
 
 	const decreaseQuantity = () => {
@@ -48,7 +43,7 @@ export function NftMint(props: Props) {
 	};
 
 	const increaseQuantity = () => {
-		setQuantity((prev) => prev + 1); // Assuming a max of 10 NFTs can be minted at once
+		setQuantity((prev) => prev + 1);
 	};
 
 	const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,13 +53,33 @@ export function NftMint(props: Props) {
 		}
 	};
 
-	// const toggleTheme = () => {
-	// 	setTheme(theme === "dark" ? "light" : "dark");
-	// };
+	// Fetch ETH price in USD from CoinGecko
+	useEffect(() => {
+		const fetchEthPrice = async () => {
+			try {
+				const response = await axios.get(
+					"https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+				);
+				setEthPriceInUSD(response.data.ethereum.usd);
+			} catch (error) {
+				console.error("Error fetching ETH price:", error);
+			}
+		};
+
+		fetchEthPrice();
+		const interval = setInterval(fetchEthPrice, 60000); // Refresh every 1 minute
+		return () => clearInterval(interval);
+	}, []);
+
+	// Calculate total price in ETH and USD
+	const totalPriceInEth = props.pricePerToken ? props.pricePerToken * quantity : 0;
+	const totalPriceInUSD = ethPriceInUSD ? (totalPriceInEth * ethPriceInUSD).toFixed(2) : "Loading...";
+
 	if (props.pricePerToken === null || props.pricePerToken === undefined) {
 		console.error("Invalid pricePerToken");
 		return null;
 	}
+
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
 			<div className="absolute top-4 right-4">
@@ -75,9 +90,7 @@ export function NftMint(props: Props) {
 					<div className="aspect-square overflow-hidden rounded-lg mb-4 relative">
 						{props.isERC1155 ? (
 							<NFT contract={props.contract} tokenId={props.tokenId}>
-								<React.Suspense
-									fallback={<Skeleton className="w-full h-full object-cover" />}
-								>
+								<React.Suspense fallback={<Skeleton className="w-full h-full object-cover" />}>
 									<NFT.Media className="w-full h-full object-cover" />
 								</React.Suspense>
 							</NFT>
@@ -86,68 +99,51 @@ export function NftMint(props: Props) {
 								client={client}
 								className="w-full h-full object-cover"
 								alt=""
-								src={
-									props.contractImage || "/placeholder.svg?height=400&width=400"
-								}
+								src={props.contractImage || "/placeholder.svg?height=400&width=400"}
 							/>
 						)}
 						<div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-sm font-semibold">
 							{props.pricePerToken} {props.currencySymbol}/each
 						</div>
 					</div>
-					<h2 className="text-2xl font-bold mb-2 dark:text-white">
-						{props.displayName}
-					</h2>
-					<p className="text-gray-600 dark:text-gray-300 mb-4">
-						{props.description}
-					</p>
+					<p className="text-gray-600 dark:text-gray-300 mb-4">{props.description}</p>
 					<div className="flex items-center justify-between mb-4">
 						<div className="flex items-center">
-						<Button
-						  variant="outline"
-						  size="icon"
- 						  onClick={decreaseQuantity}
-						  disabled={quantity <= 1}
-						  aria-label="Decrease quantity"
-						  className="rounded-r-none text-white" 		
->
-						  <Minus className="h-4 w-4" />
-						</Button>
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={decreaseQuantity}
+								disabled={quantity <= 1}
+								aria-label="Decrease quantity"
+								className="rounded-r-none text-white"
+							>
+								<Minus className="h-4 w-4" />
+							</Button>
 
-						<Input
-						  type="number"
-						  value={quantity}
-						  onChange={handleQuantityChange}
-						  className="w-13 text-center rounded-none border-x-0 pl-6 text-white"
-						  min="1"
-						/>
+							<Input
+								type="number"
+								value={quantity}
+								onChange={handleQuantityChange}
+								className="w-13 text-center rounded-none border-x-0 pl-6 text-white"
+								min="1"
+							/>
 
-						<Button
-						  variant="outline"
-						  size="icon"
-						  onClick={increaseQuantity}
-						  aria-label="Increase quantity"
-						  className="rounded-l-none text-white" 
-						>
-						  <Plus className="h-4 w-4" />
-						</Button>
-						</div>
-						<div className="text-base pr-1 font-semibold dark:text-white">
-							Total: {props.pricePerToken * quantity} {props.currencySymbol}
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={increaseQuantity}
+								aria-label="Increase quantity"
+								className="rounded-l-none text-white"
+							>
+								<Plus className="h-4 w-4" />
+							</Button>
 						</div>
 					</div>
-					{useCustomAddress && (
-						<div className="mb-4">
-							<Input
-								id="address-input"
-								type="text"
-								placeholder="Enter recipient address"
-								value={customAddress}
-								onChange={(e) => setCustomAddress(e.target.value)}
-								className="w-full"
-							/>
-						</div>
-					)}
+					<div className="text-base pr-1 font-semibold dark:text-white">
+						Total: {totalPriceInEth} {props.currencySymbol} 
+						<br />
+						≈ ${totalPriceInUSD}
+					</div>
 				</CardContent>
 				<CardFooter>
 					{account ? (
@@ -162,22 +158,19 @@ export function NftMint(props: Props) {
 											type: "ERC1155",
 											tokenId: props.tokenId,
 											quantity: BigInt(quantity),
-											to: customAddress,
-											from: account.address,
+											to: account.address,
 										}
 									: props.isERC721
-										? {
-												type: "ERC721",
-												quantity: BigInt(quantity),
-												to: customAddress,
-												from: account.address,
-											}
-										: {
-												type: "ERC20",
-												quantity: String(quantity),
-												to: customAddress,
-												from: account.address,
-											}
+									? {
+											type: "ERC721",
+											quantity: BigInt(quantity),
+											to: account.address,
+										}
+									: {
+											type: "ERC20",
+											quantity: String(quantity),
+											to: account.address,
+										}
 							}
 							style={{
 								backgroundColor: "black",
@@ -186,27 +179,16 @@ export function NftMint(props: Props) {
 							}}
 							disabled={isMinting}
 							onTransactionSent={() => toast.info("Minting NFT")}
-							onTransactionConfirmed={() =>
-								toast.success("Minted successfully")
-							}
+							onTransactionConfirmed={() => toast.success("Minted successfully")}
 							onError={(err) => toast.error(err.message)}
 						>
-							Mint {quantity} NFT Ticket{quantity > 1 ? "s" : ""}
+							Buy {quantity} Ticket{quantity > 1 ? "s" : ""}
 						</ClaimButton>
 					) : (
-						<ConnectButton
-							client={client}
-							connectButton={{ style: { width: "100%" } }}
-						/>
+						<ConnectButton client={client} connectButton={{ style: { width: "100%" } }} />
 					)}
 				</CardFooter>
 			</Card>
-			{true && (
-				<Toast className="fixed bottom-4 right-4 bg-green-500 text-white p-4 rounded-md">
-					Successfully minted {quantity} NFT{quantity > 1 ? "s" : ""}
-					{useCustomAddress && customAddress ? ` to ${customAddress}` : ""}!
-				</Toast>
-			)}
 		</div>
 	);
 }
