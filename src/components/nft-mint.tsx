@@ -103,50 +103,38 @@ export function NftMint(props: Props) {
 					</p>
 					<div className="flex items-center justify-between mb-4">
 						<div className="flex items-center">
-							<Button
-								variant="outline"
-								size="icon"
-								onClick={decreaseQuantity}
-								disabled={quantity <= 1}
-								aria-label="Decrease quantity"
-								className="rounded-r-none"
-							>
-								<Minus className="h-4 w-4" />
-							</Button>
-							<Input
-								type="number"
-								value={quantity}
-								onChange={handleQuantityChange}
-								className="w-28 text-center rounded-none border-x-0 pl-6"
-								min="1"
-							/>
-							<Button
-								variant="outline"
-								size="icon"
-								onClick={increaseQuantity}
-								aria-label="Increase quantity"
-								className="rounded-l-none"
-							>
-								<Plus className="h-4 w-4" />
-							</Button>
+						<Button
+						  variant="outline"
+						  size="icon"
+ 						  onClick={decreaseQuantity}
+						  disabled={quantity <= 1}
+						  aria-label="Decrease quantity"
+						  className="rounded-r-none text-white" 		
+>
+						  <Minus className="h-4 w-4" />
+						</Button>
+
+						<Input
+						  type="number"
+						  value={quantity}
+						  onChange={handleQuantityChange}
+						  className="w-13 text-center rounded-none border-x-0 pl-6 text-white"
+						  min="1"
+						/>
+
+						<Button
+						  variant="outline"
+						  size="icon"
+						  onClick={increaseQuantity}
+						  aria-label="Increase quantity"
+						  className="rounded-l-none text-white" 
+						>
+						  <Plus className="h-4 w-4" />
+						</Button>
 						</div>
 						<div className="text-base pr-1 font-semibold dark:text-white">
 							Total: {props.pricePerToken * quantity} {props.currencySymbol}
 						</div>
-					</div>
-
-					<div className="flex items-center space-x-2 mb-4">
-						<Switch
-							id="custom-address"
-							checked={useCustomAddress}
-							onCheckedChange={setUseCustomAddress}
-						/>
-						<Label
-							htmlFor="custom-address"
-							className={`${useCustomAddress ? "" : "text-gray-400"} cursor-pointer`}
-						>
-							Mint to a custom address
-						</Label>
 					</div>
 					{useCustomAddress && (
 						<div className="mb-4">
@@ -203,7 +191,7 @@ export function NftMint(props: Props) {
 							}
 							onError={(err) => toast.error(err.message)}
 						>
-							Mint {quantity} NFT{quantity > 1 ? "s" : ""}
+							Mint {quantity} NFT Ticket{quantity > 1 ? "s" : ""}
 						</ClaimButton>
 					) : (
 						<ConnectButton

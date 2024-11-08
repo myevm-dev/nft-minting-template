@@ -8,7 +8,7 @@ import { ToastProvider } from "@/components/ui/toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-	title: "NFT Minting template",
+	title: "NFT Minting Template",
 	description: "A minting template powered by thirdweb",
 };
 
@@ -18,8 +18,8 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
-			<body className={inter.className}>
+		<html lang="en" className="dark"> {/* Add the "dark" class here to enforce dark mode */}
+			<body className={`${inter.className} bg-background text-foreground`}>
 				<ToastProvider>
 					<Toaster position="bottom-center" />
 					<ThirdwebProvider>{children}</ThirdwebProvider>

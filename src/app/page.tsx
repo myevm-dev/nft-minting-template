@@ -1,6 +1,9 @@
 "use client";
 
 import { NftMint } from "@/components/nft-mint";
+import Dashboard from "@/components/ui/dashboard";
+import About from "@/components/ui/about";
+import Instructions from "@/components/ui/instructions";
 import {
 	defaultChainId,
 	defaultNftContractAddress,
@@ -22,8 +25,6 @@ import {
 import { getActiveClaimCondition as getActiveClaimCondition20 } from "thirdweb/extensions/erc20";
 import { useReadContract } from "thirdweb/react";
 
-// This page renders on the client.
-// If you are looking for a server-rendered version, checkout src/ssr/page.tsx
 export default function Home() {
 	const tokenId = defaultTokenId;
 	const chain = defineChain(defaultChainId);
@@ -101,16 +102,40 @@ export default function Home() {
 			: null;
 
 	return (
-		<NftMint
-			contract={contract}
-			displayName={displayName || ""}
-			contractImage={contractMetadataQuery.data?.image || ""}
-			description={description || ""}
-			currencySymbol={currencySymbol}
-			pricePerToken={pricePerToken}
-			isERC1155={!!isERC1155Query.data}
-			isERC721={!!isERC721Query.data}
-			tokenId={tokenId}
-		/>
+		<div className="container mx-auto p-4 md:p-6 min-h-screen bg-background">
+			{/* Main responsive grid layout */}
+			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				{/* Left Column - NftMint Component */}
+				<div className="lg:col-span-1 flex flex-col justify-center items-center">
+					<NftMint
+						contract={contract}
+						displayName={displayName || ""}
+						contractImage={contractMetadataQuery.data?.image || ""}
+						description={description || ""}
+						currencySymbol={currencySymbol}
+						pricePerToken={pricePerToken}
+						isERC1155={!!isERC1155Query.data}
+						isERC721={!!isERC721Query.data}
+						tokenId={tokenId}
+					/>
+				</div>
+
+				{/* Right Column - Dashboard and Instructions */}
+				<div className="lg:col-span-2 flex flex-col gap-4 mt-20">
+					{/* Dashboard with limited height */}
+					<div className="bg-gray-800 p-4 rounded-lg text-white shadow-md max-h-90 overflow-y-auto">
+						<Dashboard />
+					</div>
+
+					{/* Instructions with limited height */}
+					<div className="bg-gray-800 p-4 rounded-lg text-white shadow-md max-h-90 overflow-y-auto">
+						<Instructions />
+					</div>
+					<div className="bg-gray-800 p-4 rounded-lg text-white shadow-md max-h-90 overflow-y-auto">
+						<About />					
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }
